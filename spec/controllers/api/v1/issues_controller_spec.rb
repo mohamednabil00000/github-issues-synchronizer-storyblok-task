@@ -7,6 +7,7 @@ RSpec.describe Api::V1::IssuesController, type: :controller do
     let(:user) { create(:user) }
     let!(:open_issue) { create(:issue, state: "open", user:) }
     let!(:closed_issue) { create(:issue, state: "closed", user:) }
+    let(:json_response) { JSON.parse(response.body) }
 
     before { get :index, params: }
 
@@ -15,7 +16,8 @@ RSpec.describe Api::V1::IssuesController, type: :controller do
 
       it "returns all issues" do
         expect(response).to have_http_status(:ok)
-        expect(JSON.parse(response.body)["issues"].size).to eq(2)
+        expect(json_response["issues"].size).to eq(2)
+        expect(json_response.keys).to include("metadata", "issues")
       end
     end
 

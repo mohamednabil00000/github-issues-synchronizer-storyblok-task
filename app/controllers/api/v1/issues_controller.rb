@@ -6,7 +6,9 @@ class Api::V1::IssuesController < Api::BaseController
     issues = Issue.includes(:user)
     result = Issues::ApplyFiltersService.call(issues:, filter_params:)
     if result.success?
-      render json: { issues: IssueSerializer.collection(result.payload) }, status: :ok
+      pagy, issues = pagy(result.payload)
+
+      render json: { issues: IssueSerializer.collection(issues), metadata: pagy.data_hash }, status: :ok
     else
       render json: { errors: result.error }, status: :bad_request
     end
