@@ -24,6 +24,7 @@ class GithubRepoData::ParsingService < BaseService
     @users.uniq! { |user| user[:id] }
     success(users: @users, issues: @issues, offset_reached: @offset_reached)
   rescue StandardError => e
+    Rails.logger.error("data parsing failed: #{e.message}")
     failure("data parsing failed: #{e.message}")
   end
 

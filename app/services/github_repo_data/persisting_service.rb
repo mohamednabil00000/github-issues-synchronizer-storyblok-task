@@ -14,6 +14,7 @@ class GithubRepoData::PersistingService < BaseService
 
     success
   rescue StandardError => e
+    Rails.logger.error("data persistence failed: #{e.message}")
     failure("data persistence failed: #{e.message}")
   end
 

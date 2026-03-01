@@ -11,6 +11,7 @@ class BaseService
     service = new(...)
     service.call
   rescue StandardError => e
+    Rails.logger.error(e)
     service.failure(e)
   end
 

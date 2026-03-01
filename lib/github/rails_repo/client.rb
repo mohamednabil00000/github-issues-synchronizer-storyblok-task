@@ -26,9 +26,11 @@ module Github
               nil
             )
           else
+            Rails.logger.error("Failed to fetch issues: #{result.body}")
             Response.new(false, nil, "Failed to fetch issues: #{result.body}")
           end
         rescue StandardError => e
+          Rails.logger.error("Error occurred: #{e.message}")
           Response.new(false, nil, "Error occurred: #{e.message}")
         end
 
