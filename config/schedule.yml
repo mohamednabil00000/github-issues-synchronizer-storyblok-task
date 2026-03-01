@@ -1,0 +1,4 @@
+github_issues_synchronizer:
+  cron: "*/5 * * * *"
+  class: "GithubIssuesSynchronizerJob"
+  queue: default

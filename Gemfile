@@ -17,6 +17,7 @@ gem "pagy"
 gem "redis", "~> 5.4", ">= 5.4.1"
 
 gem "sidekiq"
+gem "sidekiq-cron"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
