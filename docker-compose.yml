@@ -2,11 +2,11 @@ version: '3.8'
 services:
   web:
     build:
-      context: ..
+      context: .
       dockerfile: ./docker/Dockerfile
     command: bundle exec rails s -p 3001 -b '0.0.0.0'
     volumes:
-      - "../.:/app"
+      - ".:/app"
     ports:
       - "3001:3001"
     depends_on:
@@ -15,6 +15,8 @@ services:
       RAILS_ENV: development
       DATABASE_URL: postgresql://postgres:password@db:5432/backend_test_development
       REDIS_URL: redis://redis:6379/0
+      GITHUB_RAILS_REPO_BASE_URL: https://api.github.com/repos/rails/rails
+      GITHUB_API_TOKEN: ${GITHUB_API_TOKEN}
 
   db:
     image: postgres:16-alpine
@@ -24,6 +26,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: backend_test_development
+      DATABASE_HOST: db
 
   redis:
     image: redis:7-alpine
@@ -37,17 +40,21 @@ services:
 
   sidekiq:
     build:
-      context: ..
+      context: .
       dockerfile: ./docker/Dockerfile
     # Overwrites the default command to run sidekiq
     command: bundle exec sidekiq
     volumes:
-      - "../.:/myapp"
+      - ".:/myapp"
     depends_on:
       - redis
       - web # Optional, but ensures web service is up if needed
     environment:
+      RAILS_ENV: development
       REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://postgres:password@db:5432/backend_test_development
+      GITHUB_RAILS_REPO_BASE_URL: https://api.github.com/repos/rails/rails
+      GITHUB_API_TOKEN: ${GITHUB_API_TOKEN}
 
 volumes:
   postgres_data:
