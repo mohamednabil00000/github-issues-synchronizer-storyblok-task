@@ -13,7 +13,9 @@ RSpec.describe Github::RailsRepo::Client do
     it "fetches the rails repo issues", vcr: { cassette_name: "github/rails_repo/success/returns_ok" } do
       result = Github::RailsRepo::Client.get_issues
       expect(result.success?).to be true
-      expect(result.payload).to be_an(Array)
+      expect(result.payload[:body]).to be_an(Array)
+      expect(result.payload[:after_cursor]).not_to be_nil
+      expect(result.payload[:before_cursor]).to be_nil
     end
   end
 

@@ -8,12 +8,13 @@ class GithubIssuesSynchronizerJob < ApplicationJob
     offset_reached = false
     page = 1
     first_issue_id = nil
+    next_cursor = nil
 
     while !offset_reached
-      result = Github::RailsRepo::Client.get_issues(page:)
-      return unless result.success?
+      http_result = Github::RailsRepo::Client.get_issues(page:, cursor: next_cursor)
+      return unless http_result.success?
 
-      parsed_data_result = GithubRepoData::ParsingService.call(data: result.payload, offset: last_issue_id)
+      parsed_data_result = GithubRepoData::ParsingService.call(data: http_result.payload[:body], offset: last_issue_id)
       return unless parsed_data_result.success?
 
       break if parsed_data_result.payload[:issues].empty?
@@ -30,6 +31,9 @@ class GithubIssuesSynchronizerJob < ApplicationJob
       )
       return unless persisted_data_result.success?
 
+      break if http_result.payload[:after_cursor].nil?
+
+      next_cursor = "after=#{http_result.payload[:after_cursor]}"
       page += 1
     end
     $redis.set("last_issue_id", first_issue_id) if first_issue_id.present?

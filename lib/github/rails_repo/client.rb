@@ -9,12 +9,24 @@ module Github
       Response = Struct.new(:success?, :payload, :error)
 
       class << self
-        def get_issues(page: 1)
-          result = HTTParty.get("#{BASE_URL}/issues?state=all&page=#{page}&per_page=50", headers: auth_headers)
+        def get_issues(page: 1, cursor: nil)
+          result = HTTParty.get(
+            "#{BASE_URL}/issues?#{get_issues_query_params(page, cursor, 100)}",
+            headers: auth_headers
+          )
+
           if result.code == 200
-            Response.new(true, JSON.parse(result.body), nil)
+            Response.new(
+              true,
+              {
+                body: JSON.parse(result.body),
+                after_cursor: result.headers["link"][/[?&]after=([^&>]+)/, 1],
+                before_cursor: result.headers["link"][/[?&]before=([^&>]+)/, 1]
+              },
+              nil
+            )
           else
-            Response.new(false, nil, "Failed to fetch issues: #{result.message}")
+            Response.new(false, nil, "Failed to fetch issues: #{result.body}")
           end
         rescue StandardError => e
           Response.new(false, nil, "Error occurred: #{e.message}")
@@ -27,6 +39,17 @@ module Github
               "Authorization" => "Bearer #{API_TOKEN}",
               "X-GitHub-Api-Version" => "2022-11-28"
             }
+          end
+
+          def get_issues_query_params(page, cursor, per_page)
+            params = []
+            params << "page=#{page}"
+            params << "per_page=#{per_page}"
+            params << "is=issue"
+            params << "state=all"
+            params << cursor unless cursor.blank?
+
+            params.join("&")
           end
       end
     end
