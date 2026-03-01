@@ -12,24 +12,28 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
   describe "#perform" do
     let(:raw_issues_page1) do
-      [
-        {
-          "id" => 456,
-          "number" => 1,
-          "title" => "Issue title",
-          "state" => "open",
-          "body" => "Body",
-          "created_at" => "2024-01-01T00:00:00Z",
-          "updated_at" => "2024-01-02T00:00:00Z",
-          "user" => {
-            "id" => 123,
-            "login" => "user1",
-            "avatar_url" => "https://example.com/avatar",
-            "url" => "https://api.github.com/users/1",
-            "type" => "User"
+      {
+        body: [
+          {
+            "id" => 456,
+            "number" => 1,
+            "title" => "Issue title",
+            "state" => "open",
+            "body" => "Body",
+            "created_at" => "2024-01-01T00:00:00Z",
+            "updated_at" => "2024-01-02T00:00:00Z",
+            "user" => {
+              "id" => 123,
+              "login" => "user1",
+              "avatar_url" => "https://example.com/avatar",
+              "url" => "https://api.github.com/users/1",
+              "type" => "User"
+            }
           }
-        }
-      ]
+        ],
+        after_cursor: 12345,
+        before_cursor: nil
+      }
     end
 
     let(:parsed_payload) do
@@ -61,7 +65,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
     context "when all steps succeed and offset is reached" do
       before do
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1).and_return(
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1, cursor: nil).and_return(
           double(success?: true, payload: raw_issues_page1)
         )
         allow(GithubRepoData::ParsingService).to receive(:call).and_return(
@@ -76,7 +80,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
       it "fetches issues, parses, persists, and sets last_issue_id in Redis" do
         described_class.perform_now
 
-        expect(Github::RailsRepo::Client).to have_received(:get_issues).with(page: 1)
+        expect(Github::RailsRepo::Client).to have_received(:get_issues).with(page: 1, cursor: nil)
         expect(GithubRepoData::ParsingService).to have_received(:call)
         expect(GithubRepoData::PersistingService).to have_received(:call)
         expect(redis).to have_received(:set).with("last_issue_id", 456)
@@ -88,7 +92,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
         described_class.perform_now
 
         expect(GithubRepoData::ParsingService).to have_received(:call).with(
-          data: raw_issues_page1,
+          data: raw_issues_page1[:body],
           offset: "100"
         )
       end
@@ -96,8 +100,8 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
     context "when first page returns empty issues" do
       before do
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1).and_return(
-          double(success?: true, payload: [])
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1, cursor: nil).and_return(
+          double(success?: true, payload: { body: [], before_cursor: nil, after_cursor: nil })
         )
         allow(GithubRepoData::ParsingService).to receive(:call).and_return(
           double(success?: true, payload: { users: [], issues: [], offset_reached: false })
@@ -113,7 +117,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
     context "when get_issues fails" do
       before do
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1).and_return(
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1, cursor: nil).and_return(
           double(success?: false)
         )
         allow(GithubRepoData::ParsingService).to receive(:call)
@@ -129,7 +133,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
     context "when ParsingService fails" do
       before do
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1).and_return(
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1, cursor: nil).and_return(
           double(success?: true, payload: raw_issues_page1)
         )
         allow(GithubRepoData::ParsingService).to receive(:call).and_return(
@@ -148,7 +152,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
     context "when PersistingService fails" do
       before do
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1).and_return(
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1, cursor: nil).and_return(
           double(success?: true, payload: raw_issues_page1)
         )
         allow(GithubRepoData::ParsingService).to receive(:call).and_return(
@@ -168,7 +172,8 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
     context "when multiple pages are fetched" do
       let(:raw_issues_page2) do
-        [
+        {
+        body: [
           {
             "id" => 455,
             "number" => 2,
@@ -185,7 +190,10 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
               "type" => "User"
             }
           }
-        ]
+        ],
+        after_cursor: nil,
+        before_cursor: nil
+      }
       end
 
       let(:parsed_page1) do
@@ -235,10 +243,10 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
       end
 
       before do
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1).and_return(
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 1, cursor: nil).and_return(
           double(success?: true, payload: raw_issues_page1)
         )
-        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 2).and_return(
+        allow(Github::RailsRepo::Client).to receive(:get_issues).with(page: 2, cursor: "after=12345").and_return(
           double(success?: true, payload: raw_issues_page2)
         )
         allow(GithubRepoData::ParsingService).to receive(:call).and_return(
@@ -253,8 +261,8 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
       it "paginates and sets last_issue_id to the first issue id from the first page" do
         described_class.perform_now
 
-        expect(Github::RailsRepo::Client).to have_received(:get_issues).with(page: 1)
-        expect(Github::RailsRepo::Client).to have_received(:get_issues).with(page: 2)
+        expect(Github::RailsRepo::Client).to have_received(:get_issues).with(page: 1, cursor: nil)
+        expect(Github::RailsRepo::Client).to have_received(:get_issues).with(page: 2, cursor: "after=12345")
         expect(redis).to have_received(:set).with("last_issue_id", 456)
       end
     end
