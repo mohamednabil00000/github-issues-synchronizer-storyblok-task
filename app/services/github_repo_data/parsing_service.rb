@@ -12,7 +12,7 @@ class GithubRepoData::ParsingService < BaseService
     @offset_reached = false
 
     data.each do |issue_data|
-      if issue_data["id"].to_s == offset
+      if offset && issue_data["id"].to_s == offset
         @offset_reached = true
         break
       end
