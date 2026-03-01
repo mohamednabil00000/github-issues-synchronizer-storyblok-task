@@ -29,6 +29,7 @@ group :development, :test do
   gem "rubocop-rspec_rails", require: false
   gem "rspec-rails", "~> 6.1.3"
   gem "factory_bot_rails"
+  gem "brakeman", require: false
 end
 
 group :test do
@@ -38,6 +39,8 @@ group :test do
   gem "webmock"
   # Shoulda Matchers provides RSpec-compatible one-liners to test common Rails functionality.
   gem "shoulda-matchers"
+  gem "simplecov", require: false
+  gem "simplecov-lcov", require: false
 end
 
 group :development do
