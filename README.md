@@ -148,7 +148,35 @@ Example:
 
 ---
 
-### 5. Screenshots
+### 5. Tricks
+  
+  #### Github has two kinds of pagination:
+  - page pagination based.
+  - cursor pagination based.
+
+  By using page pagination based only, you can't get more than 99 pages. if you want page #100 you will get this error
+  ```bash
+  result = HTTParty.get("#{BASE_URL}/issues?state=all&page=#{100}&per_page=100", headers: auth_headers)
+
+  => "{\"message\":\"Pagination with the page parameter is not supported for large datasets, please use cursor based pagination (after/before)\",\"documentation_url\":\"https://docs.github.com/rest/issues/issues#list-repository-issues\",\"status\":\"422\"}"
+  ```
+
+  So in our case since the issues can be more than that, we need to use page & cursor pagination based.
+
+---
+
+### 6. Trades off
+
+#### Using cron job to get the issues instead of real time due to
+- **Api rate limit in github (5k Req/hr).**
+- **response time will be longer due to the http call and processing the data to persist into DB.**
+- **our api shouldn't depend on the status of github servers.**
+- **In real time, user can't jump to page 100 directly(discussed in tricks section).**
+
+
+---
+
+### 7. Screenshots
 
 - **GitHub pull request description template**
 
@@ -172,7 +200,7 @@ Example:
 
 ---
 
-### 6. Useful commands
+### 8. Useful commands
 
 - **Run tests**
   ```bash
