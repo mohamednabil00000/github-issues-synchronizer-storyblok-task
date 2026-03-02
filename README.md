@@ -1,8 +1,8 @@
-## Backend Test Task – Rails API
+# Backend Test Task – Rails API
 
 Small Rails 8 API that synchronizes GitHub issues from the `rails/rails` repository, stores them in Postgres, and exposes them via a paginated JSON API.
 
-### Tech stack
+## Tech stack
 - **Ruby**: 4.0.1  
 - **Rails**: 8.1  
 - **Database**: PostgreSQL  
@@ -10,9 +10,7 @@ Small Rails 8 API that synchronizes GitHub issues from the `rails/rails` reposit
 - **Pagination**: Pagy (keyset)  
 - **Tests**: RSpec
 
----
-
-### 1. Local setup (without Docker)
+## 1. Local setup (without Docker)
 
 **Prerequisites**
 - Ruby 4.0.1 installed (e.g. via `rbenv` or `rvm`)
@@ -57,9 +55,8 @@ bin/rails server
 
 API will be available at `http://localhost:3000`.
 
----
 
-### 2. Running with Docker / Docker Compose
+## 2. Running with Docker / Docker Compose
 
 From the project root:
 
@@ -75,9 +72,7 @@ This will start:
 
 Once up, the API will be reachable at `http://localhost:3001`.
 
----
-
-### 3. Background synchronization job
+## 3. Background synchronization job
 
 The job responsible for fetching and storing GitHub issues is:
 
@@ -98,9 +93,8 @@ GithubIssuesSynchronizerJob.perform_now
 
 Sidekiq must be running (see Docker section or run it locally with `bundle exec sidekiq`).
 
----
 
-### 4. Issues API
+## 4. Issues API
 
 **Endpoint**
 
@@ -146,11 +140,10 @@ Example:
 }
 ```
 
----
 
-### 5. Tricks
+## 5. Tricks
   
-  #### - Github has two kinds of pagination:
+  ### - Github has two kinds of pagination:
   - page pagination based.
   - cursor pagination based.
 
@@ -163,27 +156,25 @@ Example:
 
   So in our case since the issues can be more than that, we need to use page & cursor pagination based.
 
-  #### - Updated rows will not be synced:
+  ### - Updated rows will not be synced:
 
   Our system just pull the new issues only but if any old issue being updated, we will not get this update, so to do that we need to activate the webhook or at least create a job to run once a day to fetch all the issues again and update them.
 
----
 
-### 6. Trades off
+## 6. Trades off
 
-#### Using cron job to get the issues instead of real time due to
+### Using cron job to get the issues instead of real time due to
 - **Api rate limit in github (5k Req/hr).**
 - **response time will be longer due to the http call and processing the data to persist into DB.**
 - **our api shouldn't depend on the status of github servers.**
 - **In real time, user can't jump to page 100 directly(discussed in tricks section).**
 
-#### making the ID of issues table string intead of id due to
+### making the ID of issues table string intead of id due to
 - **number of issues is unlimited and now is about 10 digits so I am afraid after few years github convert it to uuid or string also and that's why I did it string from the beginning to not lose any records in the future in case if github converted it.**
 - **so the trade off here is I have to create additional index for created at to return the rows in decending order like github instead of using the id as the id is string and sorting happen in lexicographically not numerically.**
 
----
 
-### 7. Screenshots
+## 7. Screenshots
 
 - **GitHub pull request description template**
 
@@ -205,9 +196,8 @@ Example:
 
   ![SimpleCov code coverage report](assets/Screenshot_5.png)
 
----
 
-### 8. Useful commands
+## 8. Useful commands
 
 - **Run tests**
   ```bash
@@ -224,3 +214,10 @@ Example:
   bundle exec sidekiq
   ```
 
+## Author
+
+**Mohamed Nabil**
+
+- <https://www.linkedin.com/in/mohamed-nabil-a184125b>
+- <https://github.com/mohamednabil00000>
+- <https://leetcode.com/mohamednabil00000/>
