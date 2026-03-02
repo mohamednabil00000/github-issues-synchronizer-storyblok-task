@@ -62,6 +62,7 @@ API will be available at `http://localhost:3000`.
 From the project root:
 
 ```bash
+add .env file
 docker-compose up --build
 ```
 
