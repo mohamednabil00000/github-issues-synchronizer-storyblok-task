@@ -10,11 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_145827) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_131458) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "issues", id: :string, force: :cascade do |t|
+  create_table "issues", id: :bigint, default: nil, force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
     t.bigint "number", null: false
