@@ -4,7 +4,7 @@ class GithubIssuesSynchronizerJob < ApplicationJob
   queue_as :default
 
   def perform(*args)
-    current_offset = $redis.get("last_issue_id")
+    current_offset = $redis.get("last_issue_id")&.to_i
     offset_reached = false
     page = 1
     new_offset = nil
@@ -17,19 +17,10 @@ class GithubIssuesSynchronizerJob < ApplicationJob
       parsed_data_result = GithubRepoData::ParsingService.call(data: http_result.payload[:body], offset: current_offset)
       return unless parsed_data_result.success?
 
-      if new_offset.nil?
-        new_offset = parsed_data_result.payload[:recent_issue_id]
-      end
-
+      new_offset = parsed_data_result.payload[:recent_issue_id] if new_offset.nil?
       offset_reached = parsed_data_result.payload[:offset_reached]
 
-      if parsed_data_result.payload[:issues].size > 0
-        persisted_data_result = GithubRepoData::PersistingService.call(
-          users_data: parsed_data_result.payload[:users],
-          issues_data: parsed_data_result.payload[:issues]
-        )
-        return unless persisted_data_result.success?
-      end
+      return unless persist_github_data?(parsed_data_result.payload)
 
       break if http_result.payload[:after_cursor].nil?
 
@@ -38,4 +29,12 @@ class GithubIssuesSynchronizerJob < ApplicationJob
     end
     $redis.set("last_issue_id", new_offset) if new_offset.present?
   end
+
+  private
+    def persist_github_data?(payload)
+      GithubRepoData::PersistingService.call(
+        users_data: payload[:users],
+        issues_data: payload[:issues]
+      ).success?
+    end
 end

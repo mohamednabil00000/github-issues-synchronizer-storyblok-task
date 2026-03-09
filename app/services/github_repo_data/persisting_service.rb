@@ -7,6 +7,8 @@ class GithubRepoData::PersistingService < BaseService
   end
 
   def call
+    return success if issues_data.empty?
+
     ActiveRecord::Base.transaction do
       User.insert_all(users_data)
       Issue.insert_all(issues_data)

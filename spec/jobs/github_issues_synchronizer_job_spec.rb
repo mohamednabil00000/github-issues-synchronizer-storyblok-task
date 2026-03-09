@@ -94,7 +94,7 @@ RSpec.describe GithubIssuesSynchronizerJob, type: :job do
 
         expect(GithubRepoData::ParsingService).to have_received(:call).with(
           data: raw_issues_page1[:body],
-          offset: "100"
+          offset: 100
         )
       end
     end

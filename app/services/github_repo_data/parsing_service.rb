@@ -3,7 +3,7 @@
 class GithubRepoData::ParsingService < BaseService
   def initialize(data:, offset: nil)
     @data = data
-    @offset = offset&.to_i
+    @offset = offset
   end
 
   def call
