@@ -171,11 +171,6 @@ Example:
 - **our api shouldn't depend on the status of github servers.**
 - **In real time, user can't jump to page 100 directly(discussed in tricks section).**
 
-### making the ID of issues table string intead of id due to
-- **number of issues is unlimited and now is about 10 digits so I am afraid after few years github convert it to uuid or string also and that's why I did it string from the beginning to not lose any records in the future in case if github converted it.**
-- **so the trade off here is I have to create additional index for created at to return the rows in decending order like github instead of using the id as the id is string and sorting happen in lexicographically not numerically.**
-
-
 ## 7. Screenshots
 
 - **GitHub pull request description template**
